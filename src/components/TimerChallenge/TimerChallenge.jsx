@@ -1,33 +1,44 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import ResultModal from '../ResultModal/ResultModal';
 
 export default function TimerChallenge({ title, targetTime }) {
-    const [timerStarted, setTimerStarted] = useState(false);
-    const [timerExpired, setTimerExpired] = useState(false);
+    const [timeRemaining, setTimeRemaining] = useState(targetTime * 1000);
 
     const timerRef = useRef();
     const resultModalRef = useRef();
 
-    const handleTimerButton = timerStarted ? handleStopButton : handleStartButton;
+    const timerIsActive = timeRemaining < (targetTime * 1000) && timeRemaining > 0;
+    const handleTimerButton = timerIsActive ? handleStopButton : handleStartButton;
+
+    if (timeRemaining <= 0) {
+        clearInterval(timerRef.current);
+        resultModalRef.current.open();
+    }
 
     function handleStartButton() {
-        setTimerStarted(true);
-
-        timerRef.current = setTimeout(() => {
-            setTimerExpired(true);
-            resultModalRef.current.open();
-        }, targetTime * 1000);
+        timerRef.current = setInterval(() => {
+            setTimeRemaining((prev) => prev - 10);
+        }, 10);
     }
 
     function handleStopButton() {
-        clearTimeout(timerRef.current);
-        setTimerStarted(false);
+        clearInterval(timerRef.current);
+        resultModalRef.current.open();
+    }
+
+    function handleModalClose() {
+        setTimeRemaining(targetTime * 1000);
     }
 
     return (
         <>
-            <ResultModal result="lost" targetTime={targetTime} ref={resultModalRef}/>
+            <ResultModal
+                targetTime={targetTime}
+                timeRemaining={timeRemaining}
+                handleModalClose={handleModalClose}
+                ref={resultModalRef}
+            />
             <section className='challenge'>
                 <h2>{title}</h2>
                 <p className='challenge-time'>
@@ -35,11 +46,11 @@ export default function TimerChallenge({ title, targetTime }) {
                 </p>
                 <p>
                     <button onClick={handleTimerButton}>
-                        {timerStarted ? 'Stop' : 'Start'}
+                        {timerIsActive ? 'Stop' : 'Start'}
                     </button>
                 </p>
-                <p className={timerStarted ? 'active' : undefined}>
-                    {timerStarted ? 'Timer is running...' : 'Timer is inactive'}
+                <p className={timerIsActive ? 'active' : undefined}>
+                    {timerIsActive ? 'Timer is running...' : 'Timer is inactive'}
                 </p>
             </section>
         </>
