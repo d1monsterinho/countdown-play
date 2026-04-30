@@ -1,4 +1,16 @@
-export default function ResultModal({ result, targetTime, dialogRef }) {
+import { useRef, useImperativeHandle } from 'react';
+
+export default function ResultModal({ result, targetTime, ref }) {
+    const dialogRef = useRef();
+
+    useImperativeHandle(ref, () => {
+        return {
+            open() {
+                dialogRef.current.show();
+            }
+        }
+    });
+
     return (
         <dialog className="result-modal" ref={dialogRef}>
             <h2>You {result}</h2>
